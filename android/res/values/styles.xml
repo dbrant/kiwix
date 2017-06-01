@@ -28,6 +28,8 @@
     <item name="android:textColorSecondary">@color/primary</item>
     <item name="android:textColorTertiary">@color/primary</item>
     <item name="android:windowTranslucentStatus" tools:targetApi="22">true</item>
+    <item name="colorControlNormal">@color/white</item>
+    <item name="android:progressBackgroundTint">@color/greyed_out_selected</item>
   </style>
 
   <style name="AppTheme.Night" parent="AppTheme.Base">
@@ -44,6 +46,7 @@
     <item name="android:textColorSecondary">@color/primary_light</item>
     <item name="android:textColorTertiary">@color/primary_light</item>
     <item name="android:windowTranslucentStatus" tools:targetApi="22">true</item>
+    <item name="colorControlNormal">@color/white</item>
   </style>
 
 

@@ -51,7 +51,10 @@ import org.kiwix.kiwixmobile.database.KiwixDatabase;
 import org.kiwix.kiwixmobile.database.RecentSearchDao;
 import org.kiwix.kiwixmobile.utils.DimenUtils;
 import org.kiwix.kiwixmobile.utils.LanguageUtils;
+import org.kiwix.kiwixmobile.utils.StyleUtils;
 import org.kiwix.kiwixmobile.views.SliderPreference;
+
+import static org.kiwix.kiwixmobile.utils.StyleUtils.dialogStyle;
 
 public class KiwixSettingsActivity extends AppCompatActivity {
 
@@ -259,13 +262,14 @@ public class KiwixSettingsActivity extends AppCompatActivity {
       }
       if (key.equals(PREF_NIGHTMODE)) {
         KiwixMobileActivity.refresh = true;
+        KiwixMobileActivity.nightMode = sharedPreferences.getBoolean(PREF_NIGHTMODE, false);
         getActivity().recreate();
       }
 
     }
 
     private void clearAllHistoryDialog() {
-      new AlertDialog.Builder(getActivity())
+      new AlertDialog.Builder(getActivity(), dialogStyle())
           .setTitle(getResources().getString(R.string.clear_all_history_dialog_title))
           .setMessage(getResources().getString(R.string.clear_recent_and_tabs_history_dialog))
           .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
@@ -287,7 +291,7 @@ public class KiwixSettingsActivity extends AppCompatActivity {
     public void openCredits(){
       WebView view = (WebView) LayoutInflater.from(getActivity()).inflate(R.layout.credits_webview, null);
       view.loadUrl("file:///android_res/raw/credits.html");
-      AlertDialog mAlertDialog = new AlertDialog.Builder(getActivity(), R.style.Theme_AppCompat_Light_Dialog_Alert)
+      AlertDialog mAlertDialog = new AlertDialog.Builder(getActivity(), dialogStyle())
           .setView(view)
           .setPositiveButton(android.R.string.ok, null)
           .show();
@@ -310,8 +314,9 @@ public class KiwixSettingsActivity extends AppCompatActivity {
       FragmentManager fm = getFragmentManager();
       StorageSelectDialog dialogFragment = new StorageSelectDialog();
       Bundle b = new Bundle();
-      b.putString("INTERNAL", getResources().getString(R.string.internal_storage));
-      b.putString("EXTERNAL", getResources().getString(R.string.external_storage));
+      b.putString(StorageSelectDialog.STORAGE_DIALOG_INTERNAL, getResources().getString(R.string.internal_storage));
+      b.putString(StorageSelectDialog.STORAGE_DIALOG_EXTERNAL, getResources().getString(R.string.external_storage));
+      b.putInt(StorageSelectDialog.STORAGE_DIALOG_THEME, StyleUtils.dialogStyle());
       dialogFragment.setArguments(b);
       dialogFragment.setOnSelectListener(this);
       dialogFragment.show(fm, getResources().getString(R.string.pref_storage));

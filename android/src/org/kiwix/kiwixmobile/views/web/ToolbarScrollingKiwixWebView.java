@@ -23,6 +23,7 @@ import android.content.Context;
 import android.view.MotionEvent;
 import android.view.View;
 
+import org.kiwix.kiwixmobile.KiwixMobileActivity;
 import org.kiwix.kiwixmobile.WebViewCallback;
 import org.kiwix.kiwixmobile.utils.DimenUtils;
 
@@ -53,7 +54,7 @@ public class ToolbarScrollingKiwixWebView extends KiwixWebView {
     toolbarView.setTranslationY(newTranslation + statusBarHeight);
     this.setTranslationY(newTranslation + toolbarHeight + statusBarHeight);
     if (listener != null && newTranslation != originalTranslation) {
-      if (newTranslation == -toolbarHeight) {
+      if (newTranslation == -toolbarHeight -statusBarHeight) {
         listener.onToolbarHidden();
       } else if (newTranslation == 0) {
         listener.onToolbarDisplayed();
@@ -72,6 +73,10 @@ public class ToolbarScrollingKiwixWebView extends KiwixWebView {
         startY = event.getRawY();
         break;
       case MotionEvent.ACTION_MOVE:
+        // If we are in fullscreen don't scroll bar
+        if (KiwixMobileActivity.isFullscreenOpened) {
+          return super.onTouchEvent(event);
+        }
         // Filter out zooms since we don't want to affect the toolbar when zooming
         if (event.getPointerCount() == 1) {
           int diffY = (int) (event.getRawY() - startY);

@@ -47,6 +47,7 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.view.menu.ActionMenuItemView;
 import android.support.v7.view.menu.MenuBuilder;
 import android.support.v7.view.menu.MenuItemImpl;
 import android.support.v7.widget.LinearLayoutManager;
@@ -62,7 +63,6 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewGroup.LayoutParams;
 import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
@@ -106,6 +106,7 @@ import org.w3c.dom.Text;
 import static android.content.res.Configuration.ORIENTATION_LANDSCAPE;
 import static org.kiwix.kiwixmobile.TableDrawerAdapter.DocumentSection;
 import static org.kiwix.kiwixmobile.TableDrawerAdapter.TableClickListener;
+import static org.kiwix.kiwixmobile.utils.StyleUtils.dialogStyle;
 
 public class KiwixMobileActivity extends AppCompatActivity implements WebViewCallback {
 
@@ -347,10 +348,6 @@ public class KiwixMobileActivity extends AppCompatActivity implements WebViewCal
       }
     });
 
-    // account for status bar height if translucent
-    final int statusBarHeight = DimenUtils.getTranslucentStatusBarHeight(this);
-    tableDrawerRight.setPadding(0, statusBarHeight, 0, 0);
-
     tableDrawerAdapter.notifyDataSetChanged();
 
     tabDrawerAdapter.setTabClickListener(new TabDrawerAdapter.TabClickListener() {
@@ -452,7 +449,7 @@ public class KiwixMobileActivity extends AppCompatActivity implements WebViewCal
     String negative = getString(R.string.rate_dialog_negative);
     String neutral = getString(R.string.rate_dialog_neutral);
 
-    new AlertDialog.Builder(this)
+    new AlertDialog.Builder(this, dialogStyle())
         .setTitle(title)
         .setMessage(message)
         .setPositiveButton(positive, (dialog, id) -> {
@@ -504,9 +501,9 @@ public class KiwixMobileActivity extends AppCompatActivity implements WebViewCal
 
   private void updateTitle(String zimFileTitle) {
     if (zimFileTitle == null || zimFileTitle.trim().isEmpty()) {
-      getSupportActionBar().setTitle(getString(R.string.app_name));
+      getSupportActionBar().setTitle(createMenuText(getString(R.string.app_name)));
     } else {
-      getSupportActionBar().setTitle(zimFileTitle);
+      getSupportActionBar().setTitle(createMenuText(zimFileTitle));
     }
   }
 
@@ -523,7 +520,7 @@ public class KiwixMobileActivity extends AppCompatActivity implements WebViewCal
           @Override
           public void run() {
             menu.findItem(R.id.menu_read_aloud)
-                .setTitle(getResources().getString(R.string.menu_read_aloud_stop));
+                .setTitle(createMenuItem(getResources().getString(R.string.menu_read_aloud_stop)));
             TTSControls.setVisibility(View.VISIBLE);
           }
         });
@@ -536,7 +533,7 @@ public class KiwixMobileActivity extends AppCompatActivity implements WebViewCal
           @Override
           public void run() {
             menu.findItem(R.id.menu_read_aloud)
-                .setTitle(getResources().getString(R.string.menu_read_aloud));
+                .setTitle(createMenuItem(getResources().getString(R.string.menu_read_aloud)));
             TTSControls.setVisibility(View.GONE);
             pauseTTSButton.setText(R.string.tts_pause);
           }
@@ -580,6 +577,25 @@ public class KiwixMobileActivity extends AppCompatActivity implements WebViewCal
     getCurrentWebView().loadUrl("javascript:(" + documentParserJs + ")()");
   }
 
+  private void shrinkDrawers() {
+    ViewGroup.MarginLayoutParams leftLayoutMargins = (ViewGroup.MarginLayoutParams) tabDrawerLeftContainer.getLayoutParams(),
+        rightLayoutMargins = (ViewGroup.MarginLayoutParams) tableDrawerRightContainer.getLayoutParams();
+
+    leftLayoutMargins.topMargin = DimenUtils.getToolbarHeight(KiwixMobileActivity.this);
+    rightLayoutMargins.topMargin = DimenUtils.getToolbarHeight(KiwixMobileActivity.this);
+    tabDrawerLeftContainer.setLayoutParams(leftLayoutMargins);
+    tableDrawerRightContainer.setLayoutParams(rightLayoutMargins);
+  }
+
+  private void expandDrawers() {
+    ViewGroup.MarginLayoutParams leftLayoutMargins = (ViewGroup.MarginLayoutParams) tabDrawerLeftContainer.getLayoutParams(),
+        rightLayoutMargins = (ViewGroup.MarginLayoutParams) tableDrawerRightContainer.getLayoutParams();
+    leftLayoutMargins.topMargin = 0;
+    rightLayoutMargins.topMargin = 0;
+    tabDrawerLeftContainer.setLayoutParams(leftLayoutMargins);
+    tableDrawerRightContainer.setLayoutParams(rightLayoutMargins);
+  }
+
   private KiwixWebView getWebView(String url) {
     KiwixWebView webView;
     if (isHideToolbar) {
@@ -588,23 +604,12 @@ public class KiwixMobileActivity extends AppCompatActivity implements WebViewCal
           new ToolbarScrollingKiwixWebView.OnToolbarVisibilityChangeListener() {
             @Override
             public void onToolbarDisplayed() {
-              ViewGroup.MarginLayoutParams leftLayoutMargins = (ViewGroup.MarginLayoutParams) tabDrawerLeftContainer.getLayoutParams(),
-                  rightLayoutMargins = (ViewGroup.MarginLayoutParams) tableDrawerRightContainer.getLayoutParams();
-
-              leftLayoutMargins.topMargin = DimenUtils.getToolbarHeight(KiwixMobileActivity.this);
-              rightLayoutMargins.topMargin = DimenUtils.getToolbarHeight(KiwixMobileActivity.this);
-              tabDrawerLeftContainer.setLayoutParams(leftLayoutMargins);
-              tableDrawerRightContainer.setLayoutParams(rightLayoutMargins);
+              shrinkDrawers();
             }
 
             @Override
             public void onToolbarHidden() {
-              ViewGroup.MarginLayoutParams leftLayoutMargins = (ViewGroup.MarginLayoutParams) tabDrawerLeftContainer.getLayoutParams(),
-                  rightLayoutMargins = (ViewGroup.MarginLayoutParams) tableDrawerRightContainer.getLayoutParams();
-              leftLayoutMargins.topMargin = 0;
-              rightLayoutMargins.topMargin = 0;
-              tabDrawerLeftContainer.setLayoutParams(leftLayoutMargins);
-              tableDrawerRightContainer.setLayoutParams(rightLayoutMargins);
+              expandDrawers();
             }
           }
       );
@@ -788,10 +793,6 @@ public class KiwixMobileActivity extends AppCompatActivity implements WebViewCal
 
     toolbarContainer.setVisibility(View.GONE);
     exitFullscreenButton.setVisibility(View.VISIBLE);
-    if (menu != null) {
-      menu.findItem(R.id.menu_fullscreen)
-          .setTitle(getResources().getString(R.string.menu_exitfullscreen));
-    }
     int fullScreenFlag = WindowManager.LayoutParams.FLAG_FULLSCREEN;
     int classicScreenFlag = WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN;
     getWindow().addFlags(fullScreenFlag);
@@ -800,15 +801,17 @@ public class KiwixMobileActivity extends AppCompatActivity implements WebViewCal
     SharedPreferences.Editor editor = settings.edit();
     editor.putBoolean(PREF_FULLSCREEN, true);
     editor.apply();
+    expandDrawers();
     isFullscreenOpened = true;
+    getCurrentWebView().requestLayout();
+    if (isHideToolbar) {
+      toolbarContainer.setTranslationY(0);
+      this.getCurrentWebView().setTranslationY(0);
+    }
   }
 
   private void closeFullScreen() {
     toolbarContainer.setVisibility(View.VISIBLE);
-    if (menu != null) {
-      menu.findItem(R.id.menu_fullscreen)
-          .setTitle(getResources().getString(R.string.menu_fullscreen));
-    }
     exitFullscreenButton.setVisibility(View.INVISIBLE);
     int fullScreenFlag = WindowManager.LayoutParams.FLAG_FULLSCREEN;
     int classicScreenFlag = WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN;
@@ -818,7 +821,13 @@ public class KiwixMobileActivity extends AppCompatActivity implements WebViewCal
     SharedPreferences.Editor editor = settings.edit();
     editor.putBoolean(PREF_FULLSCREEN, false);
     editor.apply();
+    shrinkDrawers();
     isFullscreenOpened = false;
+    getCurrentWebView().requestLayout();
+    if (isHideToolbar) {
+      toolbarContainer.setTranslationY(DimenUtils.getTranslucentStatusBarHeight(this));
+      this.getCurrentWebView().setTranslationY(DimenUtils.getToolbarAndStatusBarHeight(this));
+    }
   }
 
   public void showHelpPage() {
@@ -901,7 +910,7 @@ public class KiwixMobileActivity extends AppCompatActivity implements WebViewCal
           newZimFile.setData(Uri.fromFile(file));
           startActivity(newZimFile);
         } else {
-          AlertDialog.Builder builder = new AlertDialog.Builder(this);
+          AlertDialog.Builder builder = new AlertDialog.Builder(this, dialogStyle());
           builder.setMessage(getResources().getString(R.string.reboot_message));
           AlertDialog dialog = builder.create();
           dialog.show();
@@ -913,12 +922,28 @@ public class KiwixMobileActivity extends AppCompatActivity implements WebViewCal
 
   // Workaround for popup bottom menu on older devices
   private void StyleMenuButtons(Menu m) {
-    // Find each menu item and set its text colour to black
+    // Find each menu item and set its text colour
     for (int i = 0; i < m.size(); i++) {
-      SpannableString s = new SpannableString(m.getItem(i).getTitle());
-      s.setSpan(new ForegroundColorSpan(Color.BLACK), 0, s.length(), 0);
-      m.getItem(i).setTitle(s);
+      m.getItem(i).setTitle(createMenuItem(m.getItem(i).getTitle().toString()));
     }
+  }
+
+  // Create a correctly colored title for menu items
+  private SpannableString createMenuItem(String title){
+    SpannableString s = new SpannableString(title);
+    if (nightMode) {
+      s.setSpan(new ForegroundColorSpan(Color.WHITE), 0, s.length(), 0);
+    } else {
+      s.setSpan(new ForegroundColorSpan(Color.BLACK), 0, s.length(), 0);
+    }
+    return s;
+  }
+
+  // Create a correctly colored title for menu items
+  private SpannableString createMenuText(String title){
+    SpannableString s = new SpannableString(title);
+    s.setSpan(new ForegroundColorSpan(Color.WHITE), 0, s.length(), 0);
+    return s;
   }
 
   private void initAllMenuItems() {
@@ -928,11 +953,6 @@ public class KiwixMobileActivity extends AppCompatActivity implements WebViewCal
       menu.findItem(R.id.menu_home).setVisible(true);
       menu.findItem(R.id.menu_randomarticle).setVisible(true);
       menu.findItem(R.id.menu_searchintext).setVisible(true);
-
-      if (isFullscreenOpened) {
-        menu.findItem(R.id.menu_fullscreen)
-            .setTitle(getResources().getString(R.string.menu_exitfullscreen));
-      }
 
       MenuItem searchItem = menu.findItem(R.id.menu_search);
       searchItem.setVisible(true);
@@ -970,11 +990,25 @@ public class KiwixMobileActivity extends AppCompatActivity implements WebViewCal
         }
       });
 
+      new Handler().post(new Runnable() {
+        @Override
+        public void run() {
+          ActionMenuItemView m = (ActionMenuItemView) findViewById(R.id.menu_bookmarks);
+          if (m == null) {
+            return;
+          }
+          findViewById(R.id.menu_bookmarks).setOnLongClickListener(view -> {
+            goToBookmarks();
+            return false;
+          });
+        }
+      });
+
       if (tts.isInitialized()) {
         menu.findItem(R.id.menu_read_aloud).setVisible(true);
         if (isSpeaking) {
           menu.findItem(R.id.menu_read_aloud)
-              .setTitle(getResources().getString(R.string.menu_read_aloud_stop));
+              .setTitle(createMenuItem(getResources().getString(R.string.menu_read_aloud_stop)));
         }
       }
     } catch (Exception e) {
@@ -1142,7 +1176,7 @@ public class KiwixMobileActivity extends AppCompatActivity implements WebViewCal
   private void contentsDrawerHint() {
     drawerLayout.postDelayed(() -> drawerLayout.openDrawer(GravityCompat.END), 500);
 
-    AlertDialog.Builder builder = new AlertDialog.Builder(this);
+    AlertDialog.Builder builder = new AlertDialog.Builder(this, dialogStyle());
     builder.setMessage(getString(R.string.hint_contents_drawer_message))
         .setPositiveButton(getString(R.string.got_it), (dialog, id) -> {})
         .setTitle(getString(R.string.did_you_know))
@@ -1371,15 +1405,6 @@ public class KiwixMobileActivity extends AppCompatActivity implements WebViewCal
     refreshBookmarkSymbol(menu);
     refreshNavigationButtons();
 
-    if (nightMode) {
-      ArrayList<MenuItemImpl> menuItems =  ((MenuBuilder) menu).getNonActionItems();
-      for (int i = 0; i < menuItems.size(); i++) {
-        SpannableString styledMenuTitle = new SpannableString(menuItems.get(i).getTitle());
-        styledMenuTitle.setSpan(new ForegroundColorSpan(Color.WHITE), 0, menuItems.get(i).getTitle().length(), 0);
-        menuItems.get(i).setTitle(styledMenuTitle);
-      }
-    }
-
     if (getCurrentWebView().getUrl() == null || getCurrentWebView().getUrl().equals("file:///android_res/raw/help.html")) {
       menu.findItem(R.id.menu_read_aloud).setVisible(false);
     } else {
@@ -1597,7 +1622,7 @@ public class KiwixMobileActivity extends AppCompatActivity implements WebViewCal
 
           if (!FileUtils.doesFileExist(filePath, Constants.CUSTOM_APP_ZIM_FILE_SIZE, false)) {
 
-            AlertDialog.Builder zimFileMissingBuilder = new AlertDialog.Builder(this);
+            AlertDialog.Builder zimFileMissingBuilder = new AlertDialog.Builder(this, dialogStyle());
             zimFileMissingBuilder.setTitle(R.string.app_name);
             zimFileMissingBuilder.setMessage(R.string.customapp_missing_content);
             zimFileMissingBuilder.setIcon(R.mipmap.kiwix_icon);
@@ -1723,7 +1748,7 @@ public class KiwixMobileActivity extends AppCompatActivity implements WebViewCal
     }
 
     if (handleEvent) {
-      AlertDialog.Builder builder = new AlertDialog.Builder(KiwixMobileActivity.this);
+      AlertDialog.Builder builder = new AlertDialog.Builder(KiwixMobileActivity.this, dialogStyle());
 
       builder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
         public void onClick(DialogInterface dialog, int id) {

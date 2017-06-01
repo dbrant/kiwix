@@ -50,6 +50,7 @@ import org.kiwix.kiwixmobile.library.LibraryAdapter;
 import org.kiwix.kiwixmobile.library.entity.LibraryNetworkEntity;
 import org.kiwix.kiwixmobile.network.KiwixService;
 import org.kiwix.kiwixmobile.utils.StorageUtils;
+import org.kiwix.kiwixmobile.utils.StyleUtils;
 
 import eu.mhutti1.utils.storage.StorageDevice;
 import eu.mhutti1.utils.storage.StorageSelectDialog;
@@ -57,6 +58,7 @@ import rx.android.schedulers.AndroidSchedulers;
 
 import static org.kiwix.kiwixmobile.downloader.DownloadService.KIWIX_ROOT;
 import static org.kiwix.kiwixmobile.library.entity.LibraryNetworkEntity.*;
+import static org.kiwix.kiwixmobile.utils.StyleUtils.dialogStyle;
 
 public class LibraryFragment extends Fragment implements AdapterView.OnItemClickListener, StorageSelectDialog.OnSelectListener {
 
@@ -202,8 +204,9 @@ public class LibraryFragment extends Fragment implements AdapterView.OnItemClick
             FragmentManager fm = getFragmentManager();
             StorageSelectDialog dialogFragment = new StorageSelectDialog();
             Bundle b = new Bundle();
-            b.putString("INTERNAL", getResources().getString(R.string.internal_storage));
-            b.putString("EXTERNAL", getResources().getString(R.string.external_storage));
+            b.putString(StorageSelectDialog.STORAGE_DIALOG_INTERNAL, getResources().getString(R.string.internal_storage));
+            b.putString(StorageSelectDialog.STORAGE_DIALOG_EXTERNAL, getResources().getString(R.string.external_storage));
+            b.putInt(StorageSelectDialog.STORAGE_DIALOG_THEME, StyleUtils.dialogStyle());
             dialogFragment.setArguments(b);
             dialogFragment.setOnSelectListener(this);
             dialogFragment.show(fm, getResources().getString(R.string.pref_storage));
@@ -269,7 +272,7 @@ public class LibraryFragment extends Fragment implements AdapterView.OnItemClick
 
 
   public void mobileDownloadDialog(int position, AdapterView<?> parent) {
-    new AlertDialog.Builder(super.getActivity())
+    new AlertDialog.Builder(super.getActivity(), dialogStyle())
         .setMessage(getString(R.string.download_over_network))
         .setPositiveButton(getResources().getString(android.R.string.yes), new DialogInterface.OnClickListener() {
           public void onClick(DialogInterface dialog, int which) {
